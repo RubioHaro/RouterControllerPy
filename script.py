@@ -52,10 +52,11 @@ class Router:
             return False
         
     def getConnection(self):
+        paramiko.Transport._preferred_ciphers = ('aes128-ctr', )
         connection = paramiko.SSHClient()
         ## add aes128-ctr to the list of supported ciphers, ssh-rsa as HostKeyAlgorithms and PublickeyAuthentication, and the diffie-hellman-group1-sha1 key exchange algorithm
-        connection.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-        connection.connect(self.ip, username=self.user, password=self.password, ciphers=['aes128-ctr'], hostkeyalgorithms=['ssh-rsa'], allow_agent=False, look_for_keys=False, auth_timeout=2, banner_timeout=2, gss_auth=False)
+        # connection.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+        connection.connect(self.ip, username=self.user, password=self.password)
         return connection
     
     def __str__(self) -> str:
@@ -109,8 +110,8 @@ class RouterCLIMenu:
         # Start SSH connection
         try :
             connection = self.selected.getConnection()
-        except:
-            print("Connection error")
+        except Exception as e:
+            print("Connection error: " + str(e))
             self.show_menu()
             return
             
