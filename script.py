@@ -3,7 +3,7 @@
 # conectividad en toda la red.
 
 # Paramiko
-# import paramiko
+import paramiko
 import time
 import os
 
@@ -50,6 +50,12 @@ class Router:
             return True
         else:
             return False
+        
+    def getConnection(self):
+        connection = paramiko.SSHClient()
+        connection.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+        connection.connect(self.ip, username=self.user, password=self.password)
+        return connection
     
     def __str__(self) -> str:
         if self.subnet == '':
@@ -70,6 +76,8 @@ class RouterCLIMenu:
     def show_menu(self):
         print('Select a router: ')
         for router in self.routerList:
+            if router == self.mainRouter:
+                continue
             print(router)
         print('0. Exit')
         option = input('Enter option: ')
@@ -95,6 +103,19 @@ class RouterCLIMenu:
             self.show_menu_options()
 
     def show_menu_options(self):
+
+        print("Connecting to router...")
+        # Start SSH connection
+        try :
+            connection = self.selected.getConnection()
+        except:
+            print("Connection error")
+            self.show_menu()
+            return
+            
+        connection.close()
+        print("Connected to router " + self.selected.name)
+
         if(self.selected == None):
             return
         else:
@@ -135,20 +156,109 @@ class RouterCLIMenu:
                 print('Invalid option')
                 self.show_menu_options()
 
+
     def show_interfaces(self):
         print('show interfaces')
+        
+        print("Connecting to router...")
+        # Start SSH connection
+        try :
+            connection = self.selected.getConnection()
+        except:
+            print("Connection error")
+            self.show_menu()
+            return
+            
+        print("Connected to router " + self.selected.name)
+
+        stdin, stdout, stderr = connection.exec_command('show interfaces')
+        print(stdout.read().decode('utf-8'))
+
+        connection.close()
+        
 
     def show_routing_table(self):
         print('show routing table')
+        print("Connecting to router...")
+        # Start SSH connection
+        try :
+            connection = self.selected.getConnection()
+        except:
+            print("Connection error")
+            self.show_menu()
+            return
+        
+        print("Connected to router " + self.selected.name)
+
+        stdin, stdout, stderr = connection.exec_command('show ip route')
+        print(stdout.read().decode('utf-8'))
+
+        connection.close()
+
 
     def configure_ospf(self):
         print('configure ospf')
+        print("Connecting to router...")
+        # Start SSH connection
+        try :
+            connection = self.selected.getConnection()
+        except:
+            print("Connection error")
+            self.show_menu()
+            return
+        
+        print("Connected to router " + self.selected.name)
+
+        stdin, stdout, stderr = connection.exec_command('configure terminal')
+        stdin, stdout, stderr = connection.exec_command('router ospf 1')
+        stdin, stdout, stderr = connection.exec_command('network ' + self.selected.subnet + ' area 0')
+        stdin, stdout, stderr = connection.exec_command('end')
+        print(stdout.read().decode('utf-8'))
+
+        connection.close()
 
     def configure_rip(self):
         print('configure rip')
+        print("Connecting to router...")
+        # Start SSH connection
+        try :
+            connection = self.selected.getConnection()
+        except:
+            print("Connection error")
+            self.show_menu()
+            return
+        
+        print("Connected to router " + self.selected.name)
+        
+        stdin, stdout, stderr = connection.exec_command('configure terminal')
+        stdin, stdout, stderr = connection.exec_command('router rip')
+        stdin, stdout, stderr = connection.exec_command('version 2')
+        stdin, stdout, stderr = connection.exec_command('network ' + self.selected.subnet)
+        stdin, stdout, stderr = connection.exec_command('end')
+        print(stdout.read().decode('utf-8'))
+
+        connection.close()
+
 
     def configure_static_routes(self):
         print('configure static routes')
+        print("Connecting to router...")
+        # Start SSH connection
+        try :
+            connection = self.selected.getConnection()
+        except:
+            print("Connection error")
+            self.show_menu()
+            return
+        
+        print("Connected to router " + self.selected.name)
+
+        stdin, stdout, stderr = connection.exec_command('configure terminal')
+        stdin, stdout, stderr = connection.exec_command('ip route ' + self.selected.subnet + ' ' + self.selected.ip_r4)
+        stdin, stdout, stderr = connection.exec_command('end')
+        print(stdout.read().decode('utf-8'))
+
+        connection.close()
 
 def main():
     # Conexión SSH
