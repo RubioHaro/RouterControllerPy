@@ -19,12 +19,12 @@ class RouterHandler:
         routers = {}
         for router in array_routers:
             password = input('Enter password for router ' + router + ': ')
-            if(router == main_router):
-                routers[router] = Router(main_router,'', array_routers[router]['d_user'], password)
-                continue
+            # if(router == main_router):
+            #     routers[router] = Router(main_router,'', array_routers[router]['d_user'], password)
+            #     continue
 
             if(password == ''):
-                password = 'roy123'
+                password = '123'
 
             routers[router] = Router(router,
                 array_routers[router]['ip_r4'], array_routers[router]['d_user'], password)
@@ -52,12 +52,11 @@ class Router:
             return False
         
     def getConnection(self):
-        paramiko.Transport._preferred_ciphers = ('aes128-ctr', )
         connection = paramiko.SSHClient()
         ## add aes128-ctr to the list of supported ciphers, ssh-rsa as HostKeyAlgorithms and PublickeyAuthentication, and the diffie-hellman-group1-sha1 key exchange algorithm
-        # connection.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-        connection.connect(self.ip, username=self.user, password=self.password)
-        print('connection to '+ self.user+ '@' + self.ip)
+        connection.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+        #print('connection to '+ self.user+ '@' + self.ip)
+        connection.connect(self.ip, username=self.user, password=self.password, timeout=5, look_for_keys=False, allow_agent=False)
         return connection
     
     def __str__(self) -> str:
@@ -110,7 +109,7 @@ class RouterCLIMenu:
         print("Connecting to router...")
         # Start SSH connection
         try :
-            connection = self.selected.getConnection()
+            connection = self.mainRouter.getConnection()
             print("Connected to router " + self.selected.name)
             connection.close()
         except Exception as e:
@@ -166,18 +165,17 @@ class RouterCLIMenu:
         print("Connecting to router...")
         # Start SSH connection
         try :
-            connection = self.selected.getConnection()
-        except:
-            print("Connection error")
+            connection = self.mainRouter.getConnection()
+            print("Connected to router " + self.mainRouter.name)
+
+            stdin, stdout, stderr = connection.exec_command('show interfaces')
+            print(stdout.read().decode('utf-8'))
+
+            connection.close()
+        except Exception as e:
+            print("Connection error: " + str(e))
             self.show_menu()
             return
-            
-        print("Connected to router " + self.selected.name)
-
-        stdin, stdout, stderr = connection.exec_command('show interfaces')
-        print(stdout.read().decode('utf-8'))
-
-        connection.close()
         
 
     def show_routing_table(self):
@@ -185,62 +183,61 @@ class RouterCLIMenu:
         print("Connecting to router...")
         # Start SSH connection
         try :
-            connection = self.selected.getConnection()
-        except:
-            print("Connection error")
+            connection = self.mainRouter.getConnection()
+            print("Connected to router " + self.mainRouter.name)
+
+            stdin, stdout, stderr = connection.exec_command('show ip route')
+            print(stdout.read().decode('utf-8'))
+
+            connection.close()
+        except Exception as e:
+            print("Connection error: " + str(e))
             self.show_menu()
             return
-        
-        print("Connected to router " + self.selected.name)
-
-        stdin, stdout, stderr = connection.exec_command('show ip route')
-        print(stdout.read().decode('utf-8'))
-
-        connection.close()
-
+    
 
     def configure_ospf(self):
         print('configure ospf')
         print("Connecting to router...")
         # Start SSH connection
         try :
-            connection = self.selected.getConnection()
-        except:
-            print("Connection error")
+            connection = self.mainRouter.getConnection()
+            stdin, stdout, stderr = connection.exec_command('configure terminal')
+            stdin, stdout, stderr = connection.exec_command('router ospf 1')
+            stdin, stdout, stderr = connection.exec_command('network ' + self.selected.subnet + ' area 0')
+            stdin, stdout, stderr = connection.exec_command('end')
+            print(stdout.read().decode('utf-8'))
+
+            connection.close()
+        except Exception as e:
+            print("Connection error: " + str(e))
             self.show_menu()
             return
         
-        print("Connected to router " + self.selected.name)
+        print("Connected to router " + self.mainRouter.name)
 
-        stdin, stdout, stderr = connection.exec_command('configure terminal')
-        stdin, stdout, stderr = connection.exec_command('router ospf 1')
-        stdin, stdout, stderr = connection.exec_command('network ' + self.selected.subnet + ' area 0')
-        stdin, stdout, stderr = connection.exec_command('end')
-        print(stdout.read().decode('utf-8'))
-
-        connection.close()
 
     def configure_rip(self):
         print('configure rip')
         print("Connecting to router...")
         # Start SSH connection
         try :
-            connection = self.selected.getConnection()
-        except:
-            print("Connection error")
+            connection = self.mainRouter.getConnection()
+            stdin, stdout, stderr = connection.exec_command('configure terminal')
+            stdin, stdout, stderr = connection.exec_command('router rip')
+            stdin, stdout, stderr = connection.exec_command('version 2')
+            stdin, stdout, stderr = connection.exec_command('network ' + self.selected.subnet)
+            stdin, stdout, stderr = connection.exec_command('end')
+            print(stdout.read().decode('utf-8'))
+
+            connection.close()
+        except Exception as e:
+            print("Connection error: " + str(e))
             self.show_menu()
             return
         
-        print("Connected to router " + self.selected.name)
+        print("Connected to router " + self.mainRouter.name)
         
-        stdin, stdout, stderr = connection.exec_command('configure terminal')
-        stdin, stdout, stderr = connection.exec_command('router rip')
-        stdin, stdout, stderr = connection.exec_command('version 2')
-        stdin, stdout, stderr = connection.exec_command('network ' + self.selected.subnet)
-        stdin, stdout, stderr = connection.exec_command('end')
-        print(stdout.read().decode('utf-8'))
-
-        connection.close()
 
 
     def configure_static_routes(self):
@@ -248,20 +245,20 @@ class RouterCLIMenu:
         print("Connecting to router...")
         # Start SSH connection
         try :
-            connection = self.selected.getConnection()
-        except:
-            print("Connection error")
+            connection = self.mainRouter.getConnection()
+            print("Connected to router " + self.mainRouter.name)
+
+            stdin, stdout, stderr = connection.exec_command('configure terminal')
+            stdin, stdout, stderr = connection.exec_command('ip route ' + self.selected.subnet + ' ' + self.selected.ip_r4)
+            stdin, stdout, stderr = connection.exec_command('end')
+            print(stdout.read().decode('utf-8'))
+
+            connection.close()
+        except Exception as e:
+            print("Connection error: " + str(e))
             self.show_menu()
             return
         
-        print("Connected to router " + self.selected.name)
-
-        stdin, stdout, stderr = connection.exec_command('configure terminal')
-        stdin, stdout, stderr = connection.exec_command('ip route ' + self.selected.subnet + ' ' + self.selected.ip_r4)
-        stdin, stdout, stderr = connection.exec_command('end')
-        print(stdout.read().decode('utf-8'))
-
-        connection.close()
 
 def main():
     # Conexión SSH
