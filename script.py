@@ -19,10 +19,10 @@ class RouterHandler:
         routers = {}
         for router in array_routers:
             password = input('Enter password for router ' + router + ': ')
-            if(router == main_router):
-                routers[router] = Router(
-                    main_router, '', array_routers[router]['d_user'], password)
-                continue
+            # if(router == main_router):
+            #     routers[router] = Router(
+            #         main_router, '', array_routers[router]['d_user'], password)
+            #     continue
 
             if(password == ''):
                 password = '123'
@@ -125,7 +125,7 @@ class RouterCLIMenu:
             print('1. Show Interfaces')
             print('2. Show Routing Table')
             print('3. Complete Backbone')
-            print('6. Test Connectivity (ping)')
+            print('4. Test Connectivity (ping)')
             print('0. Select another router')
             option = input('Enter option: ')
             if(option == '0'):
@@ -148,9 +148,6 @@ class RouterCLIMenu:
                 # clear the console
                 os.system('cls' if os.name == 'nt' else 'clear')
                 self.show_menu_options()
-            elif(option == '7'):
-                self.complete_backbone()
-
             else:
                 print('Invalid option')
                 self.show_menu_options()
@@ -173,6 +170,7 @@ class RouterCLIMenu:
             print("Connection error: " + str(e))
             self.show_menu()
             return
+        self.show_menu_options()
 
     # Option 2
     def show_routing_table(self):
@@ -191,29 +189,30 @@ class RouterCLIMenu:
             print("Connection error: " + str(e))
             self.show_menu()
             return
+        self.show_menu_options()
 
-    def configure_rip(self):
-        print('configure rip')
-        print("Connecting to router...")
-        # Start SSH connection
-        try:
-            connection = self.mainRouter.getConnection()
-            stdin, stdout, stderr = connection.exec_command(
-                'configure terminal')
-            stdin, stdout, stderr = connection.exec_command('router rip')
-            stdin, stdout, stderr = connection.exec_command('version 2')
-            stdin, stdout, stderr = connection.exec_command(
-                'network ' + self.selected.subnet)
-            stdin, stdout, stderr = connection.exec_command('end')
-            print(stdout.read().decode('utf-8'))
+    # def configure_rip(self):
+    #     print('configure rip')
+    #     print("Connecting to router...")
+    #     # Start SSH connection
+    #     try:
+    #         connection = self.mainRouter.getConnection()
+    #         stdin, stdout, stderr = connection.exec_command(
+    #             'configure terminal')
+    #         stdin, stdout, stderr = connection.exec_command('router rip')
+    #         stdin, stdout, stderr = connection.exec_command('version 2')
+    #         stdin, stdout, stderr = connection.exec_command(
+    #             'network ' + self.selected.subnet)
+    #         stdin, stdout, stderr = connection.exec_command('end')
+    #         print(stdout.read().decode('utf-8'))
 
-            connection.close()
-        except Exception as e:
-            print("Connection error: " + str(e))
-            self.show_menu()
-            return
+    #         connection.close()
+    #     except Exception as e:
+    #         print("Connection error: " + str(e))
+    #         self.show_menu()
+    #         return
 
-        print("Connected to router " + self.mainRouter.name)
+    #     print("Connected to router " + self.mainRouter.name)
 
     def complete_backbone(self):
         commands = [
@@ -238,6 +237,7 @@ class RouterCLIMenu:
             print("Connected to router " + self.mainRouter.name)
 
             for command in commands:
+                print(command)
                 stdin, stdout, stderr = connection.exec_command(command)
                 print(stdout.read().decode('utf-8'))
 
@@ -246,6 +246,8 @@ class RouterCLIMenu:
             print("Connection error: " + str(e))
             self.show_menu()
             return
+
+        self.show_menu_options()
         
 
     # def configure_ospf(self):
