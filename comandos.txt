@@ -1,0 +1,43 @@
+Configurar el router
+	Pasos:
+	1. conf t : comando para ingresar al modo de configuracion del router
+	2. interface [fx/x] : Ingresamos a la interfaz que deseemos modificar (en las x va el num. de interfaz)
+	3. ip addr [ip] [mascara de red] : Configuramos la ip y la mascara de red de la interfaz elegida
+	4. no shutdown : enciende la red
+	5. Enrutamiendo dinamico:
+		a. conf t: entramos al modo de configuracion del router
+		b. router rip: habilita el protocolo RIP
+		c. version 2: habilita la version 2 del RIP
+		d. network [id red]: añadimos todas las id de red conectadas al router
+
+	Debugear:
+	1. show running-config: muestra la configuracion actual del router
+	2. show starup-config: muestra la configuracion inicial del router
+	3. copy running-config startup-config: copia las configuraciones a las de inicio
+	4. show interface: muestra la informacion de las interfaces
+	5. show ip interface br: muestra un resumen de las interfaces
+	6. Show ip route: Muestra la tabla de roteo
+
+Configurar las PCV's
+	Pasos: 
+	1. ip [ip/mascara] [gateway] : Configura el gateway y la ip de nuestra VPC
+
+	Debugear:
+	1. show ip: muestra la informacion ip de la pcv
+	2. ping [ip]: envia un ping a la ip que se introduzca
+	3. trace [ip] : Muestra la ruta que seguria para llegar a tal ip
+	4. save: guarda nuestras configuraciones de la vpc
+
+Configurar la interfaz de red
+	Pasos:
+	1. sudo tunctl -u [usuario] -t [nombre] : Creamos la interfaz de red
+	2. sudo ip addr add [ip/mascara] dev [nombre_interfazr] : Añadimos una ip a la interfaz de red
+	3. sudo route del -net [id red] [nomre_interfaz] : Eliminamos la red a la que nos conectamos
+	4. sudo ifconfig tap0 up : Iniciamos la interfaz que creamos añadiendola a la tabla de ruteo
+	5. sudo route add -net [id red] dev [nomre_interfaz] : agregamos todas las subredes que se encuentran en 
+	   el gns3 a la tabla de ruteo de nuestra maquina con el comando del punto 5
+
+	Debugear:
+	1. ip addr: muestra las tarjetas de red
+	2. ping [ip]: envia un ping a la direccion ip
+	3. ip route: muestra la tabla de ruteo
