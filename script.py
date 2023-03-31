@@ -214,8 +214,11 @@ class RouterCLIMenu:
 
     #     print("Connected to router " + self.mainRouter.name)
 
+
+
     def complete_backbone(self):
         commands = [
+            '\n',
             'config t',
             'ip route 10.0.5.0 255.255.255.0 10.0.2.1',
             'router rip',
@@ -228,7 +231,8 @@ class RouterCLIMenu:
             'network 10.0.2.8 0.0.0.3 area 1',
             'network 10.0.1.0 0.0.0.255 area 1',
             'end ',
-            'show ip route']
+            'show ip route'
+            ]
         
         print("Connecting to router...")
         # Start SSH connection
@@ -239,6 +243,7 @@ class RouterCLIMenu:
             for command in commands:
                 print(command)
                 stdin, stdout, stderr = connection.exec_command(command)
+                time.sleep(2)
                 print(stdout.read().decode('utf-8'))
 
             connection.close()
