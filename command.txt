@@ -1,0 +1,25 @@
+conf t
+logging buffered 30000
+end
+
+conf t
+ip route 10.0.5.0 255.255.255.0 10.0.2.2
+router rip
+version 2
+no auto-summary
+network 10.0.1.0
+network 10.0.2.4
+redistribute static
+redistribute ospf 1 metric 2
+exit
+end
+
+conf t
+router ospf 1
+network 10.0.1.0 0.0.0.255 area 0
+network 10.0.2.8 0.0.0.3 area 0
+redistribute rip metric 3 subnets
+redistribute static subnets
+end
+sh ip route
+exit
