@@ -57,6 +57,7 @@ class Router:
         ## add aes128-ctr to the list of supported ciphers, ssh-rsa as HostKeyAlgorithms and PublickeyAuthentication, and the diffie-hellman-group1-sha1 key exchange algorithm
         # connection.set_missing_host_key_policy(paramiko.AutoAddPolicy())
         connection.connect(self.ip, username=self.user, password=self.password)
+        print('connection to '+ self.user+ '@' + self.ip)
         return connection
     
     def __str__(self) -> str:
@@ -110,13 +111,13 @@ class RouterCLIMenu:
         # Start SSH connection
         try :
             connection = self.selected.getConnection()
+            print("Connected to router " + self.selected.name)
+            connection.close()
         except Exception as e:
             print("Connection error: " + str(e))
             self.show_menu()
             return
             
-        connection.close()
-        print("Connected to router " + self.selected.name)
 
         if(self.selected == None):
             return
