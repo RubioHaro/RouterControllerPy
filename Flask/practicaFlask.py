@@ -2,7 +2,7 @@ import json
 import time
 import getpass
 import paramiko
-from flask import Flask, jsonify, url_for
+from flask import Flask, jsonify, url_for, request
 app = Flask(__name__)
 
 
@@ -25,7 +25,7 @@ def createConnection(host, usuario, password):
     conexion.set_missing_host_key_policy(paramiko.AutoAddPolicy())
     try:
         conexion.connect(host, username=usuario,
-                     password=password, look_for_keys=False, allow_agent=False)
+                         password=password, look_for_keys=False, allow_agent=False)
         print("new connection to" + host)
         return conexion
     except:
@@ -33,20 +33,19 @@ def createConnection(host, usuario, password):
         return None
 
 
-
 class Commander:
     def __init__(self, router):
-        self.router = router 
+        self.router = router
 
     def testRouter(self):
         return self.executeCommand(command="help")
 
     def getInterfaceBrief(self):
         return self.executeCommand(command="sh ip int br")
-    
+
     def getUsersBrief(self):
         return self.executeCommand(command="sh run | i username")
-    
+
     def deleteUser(self, user):
         connection = createConnection(
             host=self.router.host, usuario=self.router.user, password=self.router.password)
@@ -59,7 +58,7 @@ class Commander:
                 time.sleep(1)
             console_out = shell.recv(65535)
             # print("executing: ", command, console_out)
-            
+
             return str(console_out)
         else:
             return "Error al conectar con SSH"
@@ -70,13 +69,14 @@ class Commander:
         if connection:
             shell = connection.invoke_shell()
             shell.send("config t\n")
-            shell.send("username " + user + " privilege " + priv + " password " + password + "\n")
+            shell.send("username " + user + " privilege " +
+                       priv + " password " + password + "\n")
             shell.send("exit t\n")
             while not shell.recv_ready:
                 time.sleep(1)
             console_out = shell.recv(65535)
             # print("executing: ", command, console_out)
-            
+
             return str(console_out)
         else:
             return "Error al conectar con SSH"
@@ -95,21 +95,21 @@ class Commander:
             (stdin, stdout, stderr) = connection.exec_command(command)
             console_out = stdout.read()
             print("executing: ", command, console_out)
-            
-            return str(console_out);
+
+            return str(console_out)
         else:
             return "Error al conectar con SSH"
 
 
-
 class Router:
-    def __init__(self, host, user, password):
+    def __init__(self, name, host, user, password):
+        self.name = name
         self.host = host
         self.user = user
         self.password = password
 
     def __str__(self) -> str:
-        return self.host+ "," + self.user + "," + self.password
+        return self.host + "," + self.user + "," + self.password
 
 
 def getRouter(hostname):
@@ -118,29 +118,72 @@ def getRouter(hostname):
     for i in range(len(routers)):
         if routers[i]["hostname"] == hostname:
             print(f'R data: {routers[i]["data"]}')
-         
+
             host = routers[i]["data"]["ip"]
             user = routers[i]["data"]["user"]
             password = routers[i]["data"]["password"]
-            return Router(host,user,password) 
+            return Router(hostname, host, user, password)
     else:
         return None
 
 
+def getRouters():
+    routers = hosts
+    routers_objects = []
+    for i in range(len(routers)):
+        hostname = routers[i]["hostname"]
+        host = routers[i]["data"]["ip"]
+        user = routers[i]["data"]["user"]
+        password = routers[i]["data"]["password"]
+        routers_objects.append(Router(hostname, host, user, password))
+    return routers_objects
+
+
 @app.route('/usuarios')
 def setUser(hostname):
-    user = "test_user"
-    password = "test_pass"
-    priv = "15"
-    selected_router = getRouter(hostname)
-    
+    if request.method == 'GET':
+        routerList = getRouters()
+        JSONResposes = []
+        # Iterate every router
+        for router in routerList:
+            cmder = Commander(router)
+            JSONResposes.append(
+                jsonify(router=router.name, response=cmder.getUsersBrief()))
 
-    if selected_router:
-        cmder = Commander(selected_router)
-        cmder.setUser(user,password=password, priv=priv)
-        return jsonify(response=cmder.getUsersBrief())
+        return jsonify(JSONResposes)
+    elif request.method == 'POST':
+        user = "test_user"
+        password = "test_pass"
+        priv = "15"
+
+        routerList = getRouters()
+        JSONResposes = []
+        # Iterate every router
+        for router in routerList:
+            cmder = Commander(router)
+            JSONResposes.append(jsonify(router=router.name, response=cmder.setUser(
+                user=user, password=password, priv=priv)))
+
+        return jsonify(JSONResposes)
+    elif request.method == 'PUT':
+        return "put method"
+    elif request.method == 'DELETE':
+        user = "test_user"
+        password = "test_pass"
+        priv = "15"
+
+        routerList = getRouters()
+        JSONResposes = []
+        # Iterate every router
+        for router in routerList:
+            cmder = Commander(router)
+            JSONResposes.append(
+                jsonify(router=router.name, response=cmder.deleteUser(user=user)))
+        return jsonify(JSONResposes)
+
     else:
-        return 'Hostname invalido',400
+        return 404
+
 
 @app.route('/routers/<hostname>/setUser')
 def setUser(hostname):
@@ -148,20 +191,19 @@ def setUser(hostname):
     password = "test_pass"
     priv = "15"
     selected_router = getRouter(hostname)
-    
 
     if selected_router:
         cmder = Commander(selected_router)
-        cmder.setUser(user,password=password, priv=priv)
+        cmder.setUser(user, password=password, priv=priv)
         return jsonify(response=cmder.getUsersBrief())
     else:
-        return 'Hostname invalido',400
+        return 'Hostname invalido', 400
+
 
 @app.route('/routers/<hostname>/deleteUser')
 def delelteUser(hostname):
     user = "test_user"
     selected_router = getRouter(hostname)
-    
 
     if selected_router:
         cmder = Commander(selected_router)
@@ -169,6 +211,7 @@ def delelteUser(hostname):
         return jsonify(response=cmder.getUsersBrief())
     else:
         return 'Hostname invalido', 400
+
 
 @app.route('/routers/<hostname>/usuarios')
 def users(hostname):
@@ -179,7 +222,7 @@ def users(hostname):
         cmder = Commander(selected_router)
         return jsonify(response=cmder.getUsersBrief())
     else:
-        return 'Hostname invalido', status
+        return 'Hostname invalido', 400
 
 
 @app.route('/routers/<hostname>/interfaces')
@@ -191,9 +234,7 @@ def interfaces(hostname):
         cmder = Commander(selected_router)
         return jsonify(response=cmder.getInterfaceBrief())
     else:
-        return 'Hostname invalido',400
-
-
+        return 'Hostname invalido', 400
 
 
 @app.route('/routers/<hostname>/')
@@ -205,10 +246,8 @@ def ping(hostname):
         cmder = Commander(selected_router)
         return jsonify(response=cmder.testRouter())
     else:
-        return 'Hostname invalido',400
+        return 'Hostname invalido', 400
 
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=8080, debug=True)
-
-
