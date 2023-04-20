@@ -43,6 +43,50 @@ class Commander:
 
     def getInterfaceBrief(self):
         return self.executeCommand(command="sh ip int br")
+    
+    def getUsersBrief(self):
+        return self.executeCommand(command="sh run | i username")
+    
+    def deleteUser(self, user):
+        connection = createConnection(
+            host=self.router.host, usuario=self.router.user, password=self.router.password)
+        if connection:
+            shell = connection.invoke_shell()
+            shell.send("config t\n")
+            shell.send("no username " + user + "\n")
+            shell.send("exit t\n")
+            while not shell.recv_ready:
+                time.sleep(1)
+            console_out = shell.recv(65535)
+            # print("executing: ", command, console_out)
+            
+            return str(console_out)
+        else:
+            return "Error al conectar con SSH"
+
+    def setUser(self, user, password, priv):
+        connection = createConnection(
+            host=self.router.host, usuario=self.router.user, password=self.router.password)
+        if connection:
+            shell = connection.invoke_shell()
+            shell.send("config t\n")
+            shell.send("username " + user + " privilege " + priv + " password " + password + "\n")
+            shell.send("exit t\n")
+            while not shell.recv_ready:
+                time.sleep(1)
+            console_out = shell.recv(65535)
+            # print("executing: ", command, console_out)
+            
+            return str(console_out)
+        else:
+            return "Error al conectar con SSH"
+
+        # command = "config terminal \nusername " + user + " privilege " + priv + " password " + password
+        # return self.executeCommand(command)
+
+    # todo: implement
+    def executeCommands(self, commands):
+        return None
 
     def executeCommand(self, command):
         connection = createConnection(
@@ -83,8 +127,63 @@ def getRouter(hostname):
         return None
 
 
+@app.route('/usuarios')
+def setUser(hostname):
+    user = "test_user"
+    password = "test_pass"
+    priv = "15"
+    selected_router = getRouter(hostname)
+    
+
+    if selected_router:
+        cmder = Commander(selected_router)
+        cmder.setUser(user,password=password, priv=priv)
+        return jsonify(response=cmder.getUsersBrief())
+    else:
+        return 'Hostname invalido',400
+
+@app.route('/routers/<hostname>/setUser')
+def setUser(hostname):
+    user = "test_user"
+    password = "test_pass"
+    priv = "15"
+    selected_router = getRouter(hostname)
+    
+
+    if selected_router:
+        cmder = Commander(selected_router)
+        cmder.setUser(user,password=password, priv=priv)
+        return jsonify(response=cmder.getUsersBrief())
+    else:
+        return 'Hostname invalido',400
+
+@app.route('/routers/<hostname>/deleteUser')
+def delelteUser(hostname):
+    user = "test_user"
+    selected_router = getRouter(hostname)
+    
+
+    if selected_router:
+        cmder = Commander(selected_router)
+        cmder.deleteUser(user)
+        return jsonify(response=cmder.getUsersBrief())
+    else:
+        return 'Hostname invalido', 400
+
 @app.route('/routers/<hostname>/usuarios')
-def dispositivo(hostname):
+def users(hostname):
+
+    selected_router = getRouter(hostname)
+
+    if selected_router:
+        cmder = Commander(selected_router)
+        return jsonify(response=cmder.getUsersBrief())
+    else:
+        return 'Hostname invalido', status
+
+
+@app.route('/routers/<hostname>/interfaces')
+def interfaces(hostname):
 
     selected_router = getRouter(hostname)
 
@@ -92,7 +191,21 @@ def dispositivo(hostname):
         cmder = Commander(selected_router)
         return jsonify(response=cmder.getInterfaceBrief())
     else:
-        return 'Hostname invalido'
+        return 'Hostname invalido',400
+
+
+
+
+@app.route('/routers/<hostname>/')
+def ping(hostname):
+
+    selected_router = getRouter(hostname)
+
+    if selected_router:
+        cmder = Commander(selected_router)
+        return jsonify(response=cmder.testRouter())
+    else:
+        return 'Hostname invalido',400
 
 
 if __name__ == '__main__':
