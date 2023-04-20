@@ -10,7 +10,23 @@
     {
         "hostname": "R2",
         "data": {
-            "ip": "10.0.1.6",
+            "ip": "10.10.10.6",
+            "user": "roy",
+            "password": "123"
+        }
+    },
+    {
+        "hostname": "TOR-1",
+        "data": {
+            "ip": "10.10.10.14",
+            "user": "roy",
+            "password": "123"
+        }
+    },
+    {
+        "hostname": "TOR-2",
+        "data": {
+            "ip": "10.10.10.10",
             "user": "roy",
             "password": "123"
         }
@@ -18,31 +34,15 @@
     {
         "hostname": "R2",
         "data": {
-            "ip": "10.0.1.14",
+            "ip": "10.10.10.6",
             "user": "roy",
             "password": "123"
         }
     },
     {
-        "hostname": "R2",
+        "hostname": "EDGE",
         "data": {
-            "ip": "10.0.1.10",
-            "user": "roy",
-            "password": "123"
-        }
-    },
-    {
-        "hostname": "R2",
-        "data": {
-            "ip": "10.0.1.1",
-            "user": "roy",
-            "password": "123"
-        }
-    },
-    {
-        "hostname": "R2",
-        "data": {
-            "ip": "10.0.1.1",
+            "ip": "10.10.10.1",
             "user": "roy",
             "password": "123"
         }
