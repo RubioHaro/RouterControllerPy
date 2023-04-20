@@ -27,36 +27,35 @@ def createConnection(host, usuario, password):
         conexion.connect(host, username=usuario,
                      password=password, look_for_keys=False, allow_agent=False)
         print("new connection to" + host)
-        return conexion.invoke_shell()
+        return conexion
     except:
         print("An exception occurred: connection failed")
         return None
 
-def executeCommand(command, router):
-    connection = createConnection(
-        host=router.host, usuario=router.user, password=router.password)
-    if connection:
-        output = clear_buffer(connection)
-        time.sleep(2)
-        connection.send("terminal length 0\n")
-        output = clear_buffer(connection)
 
-        connection.send(command)
-        time.sleep(2)
-        output = connection.recv(max_buffer)
-        # print(output)
-
-        connection.close()
-        return output;
-    else:
-        return "Error al conectar con SSH"
 
 class Commander:
     def __init__(self, router):
         self.router = router 
 
+    def testRouter(self):
+        return self.executeCommand(command="help")
+
     def getInterfaceBrief(self):
-        return executeCommand(command="sh ip int br",router=self.router)
+        return self.executeCommand(command="sh ip int br")
+
+    def executeCommand(self, command):
+        connection = createConnection(
+            host=self.router.host, usuario=self.router.user, password=self.router.password)
+        if connection:
+            (stdin, stdout, stderr) = connection.exec_command(command)
+            console_out = stdout.read()
+            print("executing: ", command, console_out)
+            
+            return str(console_out);
+        else:
+            return "Error al conectar con SSH"
+
 
 
 class Router:
@@ -69,34 +68,31 @@ class Router:
         return self.host+ "," + self.user + "," + self.password
 
 
-@app.route('/routers/<hostname>/usuarios')
-def dispositivo(hostname):
+def getRouter(hostname):
     routers = hosts
-
-    result = [x for x in hosts if x["hostname"]==hostname]
 
     for i in range(len(routers)):
         if routers[i]["hostname"] == hostname:
-            # print(f'R data: {routers[i]["data"]}')
+            print(f'R data: {routers[i]["data"]}')
          
             host = routers[i]["data"]["ip"]
             user = routers[i]["data"]["user"]
             password = routers[i]["data"]["password"]
+            return Router(host,user,password) 
+    else:
+        return None
 
-            # print("creating new router....")
-            
-            selected_router = Router(host,user,password)
 
-            cmder = Commander(selected_router)
-            
+@app.route('/routers/<hostname>/usuarios')
+def dispositivo(hostname):
 
-            return jsonify(response=cmder.getInterfaceBrief())
+    selected_router = getRouter(hostname)
+
+    if selected_router:
+        cmder = Commander(selected_router)
+        return jsonify(response=cmder.getInterfaceBrief())
     else:
         return 'Hostname invalido'
-
-    for router in routers:
-        with app.test_request_context():
-            print(url_for('dispositivo', hostname=router, interface=num_interface))
 
 
 if __name__ == '__main__':
