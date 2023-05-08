@@ -2,7 +2,7 @@ import json
 import time
 import getpass
 import paramiko
-import Router
+from Router import Router
 from flask import Flask, jsonify, url_for, request, Response
 app = Flask(__name__)
 
@@ -146,8 +146,39 @@ def usuarios():
         # Iterate every router
         for router in routerList:
             cmder = Commander(router)
-            JSONResposes.append("router=" + router.name +
-                                ", " + "response=" + cmder.getUsersBrief())
+            console_out = cmder.getUsersBrief()
+            
+            splitted_out_by_user = console_out.split("username")
+            user_list = []
+            for unformated_user in splitted_out_by_user:
+                splited_unformated_user = unformated_user.split(" ")
+                cant_users = 0
+                if len(splited_unformated_user)>1:
+                    cant_users = cant_users + 1
+                    user = splited_unformated_user[1]
+                    if splited_unformated_user[2] == "privilege":
+                        privilege = splited_unformated_user[3]
+                        password_type = splited_unformated_user[4]
+                    else:
+                        privilege = "None"
+                        password_type = splited_unformated_user[2]
+                    user_json = {
+                        "user": user,
+                        "privilege": privilege,
+                        "password_type": password_type
+                    }
+                    user_list.append(user_json)  
+
+            print(user_list)
+
+            router_result = {
+                "router": router.name,
+                "usuarios": cant_users,
+                "user_list": user_list,
+                "original_ouput": console_out
+            }
+
+            JSONResposes.append(router_result)
 
         response_json = {
             "results": JSONResposes
