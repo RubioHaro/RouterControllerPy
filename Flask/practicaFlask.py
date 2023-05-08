@@ -151,9 +151,23 @@ def usuarios():
 
         return jsonify(JSONResposes)
     elif request.method == 'POST':
-        user = "poito"
-        password = "poito"
-        priv = "15"
+        data = request.json
+
+        user = data.get('user')
+        if user == None or user == "":
+            return "user is required"
+
+        password = data.get('password')
+        if password == None or password == "":
+            return "password is required"
+
+        priv = data.get('privilege')
+        if priv == None:
+            return "privilege is required"
+        if priv == "":
+            priv = "1"
+        if priv not in ["1", "15"]:
+            return "privilege must be 1 or 15"
 
         routerList = getRouters()
         JSONResposes = []
