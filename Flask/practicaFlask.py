@@ -2,7 +2,7 @@ import json
 import time
 import getpass
 import paramiko
-from flask import Flask, jsonify, url_for, request
+from flask import Flask, jsonify, url_for, request, Response
 app = Flask(__name__)
 
 
@@ -108,6 +108,13 @@ class Router:
         self.user = user
         self.password = password
 
+    def __init__(self, name, host, user, password, interfaces_list):
+        self.name = name
+        self.host = host
+        self.user = user
+        self.password = password
+        self.interfaces_list = interfaces_list
+
     def __str__(self) -> str:
         return self.host + "," + self.user + "," + self.password
 
@@ -122,7 +129,8 @@ def getRouter(hostname):
             host = routers[i]["data"]["ip"]
             user = routers[i]["data"]["user"]
             password = routers[i]["data"]["password"]
-            return Router(hostname, host, user, password)
+            interfaces_list = routers[i]["interfaces"]
+            return Router(hostname, host, user, password, interfaces_list)
     else:
         return None
 
@@ -135,7 +143,12 @@ def getRouters():
         host = routers[i]["data"]["ip"]
         user = routers[i]["data"]["user"]
         password = routers[i]["data"]["password"]
-        routers_objects.append(Router(hostname, host, user, password))
+        try:
+            interfaces_list = routers[i]["interfaces"]
+        except:
+            interfaces_list = "None"
+
+        routers_objects.append(Router(hostname, host, user, password, interfaces_list))
     return routers_objects
 
 
@@ -251,6 +264,34 @@ def delelteUser(hostname):
         return jsonify(response=cmder.getUsersBrief())
     else:
         return 'Hostname invalido', 400
+
+@app.route('/routers')
+def routersList():
+    response = []
+    routerList = getRouters()
+
+
+    for router in routerList: 
+        # response.append(str(router))
+        # a Python object (dict):
+        interfaces = "None"
+        if hasattr(router, "interfaces_list") and router.interfaces_list != "" and router.interfaces_list != "":
+            interfaces = router.interfaces_list
+        
+        router_json = {
+        "hostname": router.name,
+        "data" : {
+            "ip": "10.10.10.6",
+            "user": "roy",
+            "password": "123"
+        },
+        "interfaces": interfaces
+        }
+
+        response.append(router_json)
+
+        
+    return jsonify(result=response) 
 
 
 @app.route('/routers/<hostname>/usuarios')
