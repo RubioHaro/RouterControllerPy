@@ -26,7 +26,7 @@ def createConnection(host, usuario, password):
     conexion.set_missing_host_key_policy(paramiko.AutoAddPolicy())
     try:
         conexion.connect(host, username=usuario,
-                         password=password, look_for_keys=False, allow_agent=False)
+                         password=password, look_for_keys=False, allow_agent=False, timeout=0.5)
         print("new connection to" + host)
         return conexion
     except:
@@ -93,9 +93,9 @@ class Commander:
         connection = createConnection(
             host=self.router.host, usuario=self.router.user, password=self.router.password)
         if connection:
-            (stdin, stdout, stderr) = connection.exec_command(command)
+            (stdin, stdout, stderr) = connection.exec_command(command=command)
             console_out = stdout.read()
-            print("executing: ", command, console_out)
+            # print("executing: ", command, console_out)
 
             return str(console_out)
         else:
@@ -107,16 +107,18 @@ def getRouter(hostname):
 
     for i in range(len(routers)):
         if routers[i]["hostname"] == hostname:
-            print(f'R data: {routers[i]["data"]}')
+            # print(f'R data: {routers[i]["data"]}')
 
             host = routers[i]["data"]["ip"]
             user = routers[i]["data"]["user"]
+            so = routers[i]["data"]["so"]
+            ip_lookback = routers[i]["data"]["ip_lookback"]
             password = routers[i]["data"]["password"]
             try:
                 interfaces_list = routers[i]["interfaces"]
             except:
                 interfaces_list = "None"
-            return Router(hostname, host, user, password, interfaces_list)
+            return Router(hostname, host, user, password, interfaces_list, ip_lookback, so)
     else:
         return None
 
@@ -128,13 +130,15 @@ def getRouters():
         hostname = routers[i]["hostname"]
         host = routers[i]["data"]["ip"]
         user = routers[i]["data"]["user"]
+        so = routers[i]["data"]["so"]
+        ip_lookback = routers[i]["data"]["ip_lookback"]
         password = routers[i]["data"]["password"]
         try:
             interfaces_list = routers[i]["interfaces"]
         except:
             interfaces_list = "None"
 
-        routers_objects.append(Router(hostname, host, user, password, interfaces_list))
+        routers_objects.append(Router(hostname, host, user, password, interfaces_list, so, ip_lookback))
     return routers_objects
 
 
@@ -169,7 +173,7 @@ def usuarios():
                     }
                     user_list.append(user_json)  
 
-            print(user_list)
+            # print(user_list)
 
             router_result = {
                 "router": router.name,
@@ -325,8 +329,10 @@ def routersList():
         "hostname": router.name,
         "data" : {
             "ip": router.host,
+            "ip_lookback": router.ip_lookback,
             "admin_user": router.user,
-            "admin_password": router.password
+            "admin_password": router.password,
+            "os": router.os
         },
         "interfaces": interfaces
         }
@@ -368,7 +374,30 @@ def ping(hostname):
 
     if selected_router:
         cmder = Commander(selected_router)
-        return jsonify(response=cmder.testRouter())
+        isAlive = 0
+        out = cmder.testRouter()
+        if len(out)> 25:
+            isAlive = 1
+        router = selected_router
+        
+        interfaces = "None"
+        if hasattr(router, "interfaces_list") and router.interfaces_list != "" and router.interfaces_list != "None":
+            interfaces = router.interfaces_list
+
+
+        response = {
+            "hostname": router.name,
+            "data" : {
+                    "ip": router.host,
+                    "ip_lookback": router.ip_lookback,
+                    "admin_user": router.user,
+                    "admin_password": router.password,
+                    "os": router.os
+                },
+            "interfaces": interfaces,
+            "is_alive": isAlive
+        }
+        return jsonify(response)
     else:
         return 'Hostname invalido', 400
 
