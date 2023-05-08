@@ -139,21 +139,20 @@ def getRouters():
     return routers_objects
 
 
-@app.route('/usuarios')
-def setUser(hostname):
+@app.route('/usuarios', methods=['GET', 'POST', 'DELETE', 'PUT'])
+def usuarios():
     if request.method == 'GET':
         routerList = getRouters()
         JSONResposes = []
         # Iterate every router
         for router in routerList:
             cmder = Commander(router)
-            JSONResposes.append(
-                jsonify(router=router.name, response=cmder.getUsersBrief()))
+            JSONResposes.append("router=" +router.name + ", "+  "response=" + cmder.getUsersBrief())
 
         return jsonify(JSONResposes)
     elif request.method == 'POST':
-        user = "test_user"
-        password = "test_pass"
+        user = "poito"
+        password = "poito"
         priv = "15"
 
         routerList = getRouters()
@@ -161,8 +160,8 @@ def setUser(hostname):
         # Iterate every router
         for router in routerList:
             cmder = Commander(router)
-            JSONResposes.append(jsonify(router=router.name, response=cmder.setUser(
-                user=user, password=password, priv=priv)))
+            JSONResposes.append("router=" +router.name + ", "+  "response=" + cmder.setUser(
+                user=user, password=password, priv=priv))
 
         return jsonify(JSONResposes)
     elif request.method == 'PUT':
