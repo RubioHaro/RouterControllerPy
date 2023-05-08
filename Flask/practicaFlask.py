@@ -2,6 +2,7 @@ import json
 import time
 import getpass
 import paramiko
+import Router
 from flask import Flask, jsonify, url_for, request, Response
 app = Flask(__name__)
 
@@ -99,24 +100,6 @@ class Commander:
             return str(console_out)
         else:
             return "Error al conectar con SSH"
-
-
-class Router:
-    def __init__(self, name, host, user, password):
-        self.name = name
-        self.host = host
-        self.user = user
-        self.password = password
-
-    def __init__(self, name, host, user, password, interfaces_list):
-        self.name = name
-        self.host = host
-        self.user = user
-        self.password = password
-        self.interfaces_list = interfaces_list
-
-    def __str__(self) -> str:
-        return self.host + "," + self.user + "," + self.password
 
 
 def getRouter(hostname):
