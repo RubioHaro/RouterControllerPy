@@ -112,7 +112,10 @@ def getRouter(hostname):
             host = routers[i]["data"]["ip"]
             user = routers[i]["data"]["user"]
             password = routers[i]["data"]["password"]
-            interfaces_list = routers[i]["interfaces"]
+            try:
+                interfaces_list = routers[i]["interfaces"]
+            except:
+                interfaces_list = "None"
             return Router(hostname, host, user, password, interfaces_list)
     else:
         return None
@@ -146,7 +149,10 @@ def usuarios():
             JSONResposes.append("router=" + router.name +
                                 ", " + "response=" + cmder.getUsersBrief())
 
-        return jsonify(JSONResposes)
+        response_json = {
+            "results": JSONResposes
+        }
+        return jsonify(response_json)
     elif request.method == 'POST':
         data = request.json
 
@@ -171,8 +177,17 @@ def usuarios():
             cmder = Commander(router)
             JSONResposes.append("router=" + router.name + ", " + "response=" + cmder.setUser(
                 user=user, password=password, priv=priv))
+        
+        response_json = {
+        "data" : {
+            "user": user,
+            "password": password,
+            "privilege": priv
+        },
+        "result": JSONResposes
+        }
 
-        return jsonify(JSONResposes)
+        return jsonify(response_json)
     elif request.method == 'PUT':
         data = request.json
         new_user = data.get('new_user')
@@ -201,7 +216,16 @@ def usuarios():
             JSONResposes.append("router=" + str(router.name) + ", " + "response=" + cmder.setUser(
                 user=new_user, password=password, priv=priv))
 
-        return jsonify(JSONResposes)
+        response_json = {
+        "data" : {
+            "new_user": new_user,
+            "old_user": user,
+            "password": password,
+            "privilege": priv
+        },
+        "result": JSONResposes
+        }
+        return jsonify(response_json)
     elif request.method == 'DELETE':
         data = request.json
         user = data.get('user')
@@ -215,7 +239,13 @@ def usuarios():
             cmder = Commander(router)
             JSONResposes.append("router=" + router.name +
                                 ", " + "response=" + cmder.deleteUser(user=user))
-        return jsonify(JSONResposes)
+        response_json = {
+        "data" : {
+            "user": user
+        },
+        "result": JSONResposes
+        }
+        return jsonify(response_json)
 
     else:
         return 404
@@ -260,13 +290,12 @@ def routersList():
         interfaces = "None"
         if hasattr(router, "interfaces_list") and router.interfaces_list != "" and router.interfaces_list != "":
             interfaces = router.interfaces_list
-        
         router_json = {
         "hostname": router.name,
         "data" : {
-            "ip": "10.10.10.6",
-            "user": "roy",
-            "password": "123"
+            "ip": router.host,
+            "admin_user": router.user,
+            "admin_password": router.password
         },
         "interfaces": interfaces
         }
