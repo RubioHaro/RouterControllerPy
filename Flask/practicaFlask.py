@@ -163,9 +163,7 @@ def usuarios():
             return "password is required"
 
         priv = data.get('privilege')
-        if priv == None:
-            return "privilege is required"
-        if priv == "":
+        if priv == "" or priv ==None:
             priv = "1"
         if priv not in ["1", "15"]:
             return "privilege must be 1 or 15"
@@ -182,16 +180,13 @@ def usuarios():
     elif request.method == 'PUT':
         data = request.json
         new_user = data.get('new_user')
-        if new_user == None or user == "":
-            return "new_user is required"
-
         user = data.get('user')
         if user == None or user == "":
             return "user is required"
 
         password = data.get('password')
-        if password == None or password == "":
-            return "password is required"
+        if password == "" or password == None:
+            return "password cannot be emṕty"
 
         priv = data.get('privilege')
         if priv == None:
@@ -207,18 +202,15 @@ def usuarios():
         for router in routerList:
             cmder = Commander(router)
             cmder.deleteUser(user=user)
-            JSONResposes.append("router=" + router.name + ", " + "response=" + cmder.setUser(
+            JSONResposes.append("router=" + str(router.name) + ", " + "response=" + cmder.setUser(
                 user=new_user, password=password, priv=priv))
 
+        return jsonify(JSONResposes)
     elif request.method == 'DELETE':
         data = request.json
         user = data.get('user')
         if user == None or user == "":
             return "user is required"
-        
-        user = "test_user"
-        password = "test_pass"
-        priv = "15"
 
         routerList = getRouters()
         JSONResposes = []
