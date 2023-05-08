@@ -147,7 +147,8 @@ def usuarios():
         # Iterate every router
         for router in routerList:
             cmder = Commander(router)
-            JSONResposes.append("router=" +router.name + ", "+  "response=" + cmder.getUsersBrief())
+            JSONResposes.append("router=" + router.name +
+                                ", " + "response=" + cmder.getUsersBrief())
 
         return jsonify(JSONResposes)
     elif request.method == 'POST':
@@ -174,13 +175,47 @@ def usuarios():
         # Iterate every router
         for router in routerList:
             cmder = Commander(router)
-            JSONResposes.append("router=" +router.name + ", "+  "response=" + cmder.setUser(
+            JSONResposes.append("router=" + router.name + ", " + "response=" + cmder.setUser(
                 user=user, password=password, priv=priv))
 
         return jsonify(JSONResposes)
     elif request.method == 'PUT':
-        return "put method"
+        data = request.json
+        new_user = data.get('new_user')
+        if new_user == None or user == "":
+            return "new_user is required"
+
+        user = data.get('user')
+        if user == None or user == "":
+            return "user is required"
+
+        password = data.get('password')
+        if password == None or password == "":
+            return "password is required"
+
+        priv = data.get('privilege')
+        if priv == None:
+            return "privilege is required"
+        if priv == "":
+            priv = "1"
+        if priv not in ["1", "15"]:
+            return "privilege must be 1 or 15"
+
+        routerList = getRouters()
+        JSONResposes = []
+        # Iterate every router
+        for router in routerList:
+            cmder = Commander(router)
+            cmder.deleteUser(user=user)
+            JSONResposes.append("router=" + router.name + ", " + "response=" + cmder.setUser(
+                user=new_user, password=password, priv=priv))
+
     elif request.method == 'DELETE':
+        data = request.json
+        user = data.get('user')
+        if user == None or user == "":
+            return "user is required"
+        
         user = "test_user"
         password = "test_pass"
         priv = "15"
@@ -190,8 +225,8 @@ def usuarios():
         # Iterate every router
         for router in routerList:
             cmder = Commander(router)
-            JSONResposes.append(
-                jsonify(router=router.name, response=cmder.deleteUser(user=user)))
+            JSONResposes.append("router=" + router.name +
+                                ", " + "response=" + cmder.deleteUser(user=user))
         return jsonify(JSONResposes)
 
     else:
