@@ -6,16 +6,21 @@
             "user": "roy",
             "password": "123",
             "ip_lookback": "127.0.0.1",
-            "so": "Cisco IOS Software, 7200 Software (C7200-ADVENTERPRISEK9-M), Version 15.2(4)M7"
+            "so": "Cisco IOS Software, 7200 Software (C7200-ADVENTERPRISEK9-M), Version 15.2(4)M7",
+            "alive": 1
         },
         "interfaces": [
             {
-                "name": "fe2",
+                "name": "fe1",
                 "ip": "10.10.10.2"
             },
             {
                 "name": "fe1",
-                "ip": "192.168.xx"
+                "ip": "10.10.10.9"
+            },
+            {
+                "name": "fe1",
+                "ip": "10.10.10.17"
             }
         ]
     },
@@ -26,8 +31,23 @@
             "user": "roy",
             "password": "123",
             "ip_lookback": "127.0.0.1",
-            "so": "Cisco IOS Software, 7200 Software (C7200-ADVENTERPRISEK9-M), Version 15.2(4)M7"
-        }
+            "so": "Cisco IOS Software, 7200 Software (C7200-ADVENTERPRISEK9-M), Version 15.2(4)M7",
+            "alive": 1
+        },
+        "interfaces": [
+            {
+                "name": "fe4",
+                "ip": "10.10.10.6"
+            },
+            {
+                "name": "fe5",
+                "ip": "10.10.10.13"
+            },
+            {
+                "name": "fe5",
+                "ip": "10.10.10.21"
+            }
+        ]
     },
     {
         "hostname": "TOR-1",
@@ -36,8 +56,19 @@
             "user": "roy",
             "password": "123",
             "ip_lookback": "127.0.0.1",
-            "so": "Cisco IOS Software, 7200 Software (C7200-ADVENTERPRISEK9-M), Version 15.2(4)M7"
-        }
+            "so": "Cisco IOS Software, 7200 Software (C7200-ADVENTERPRISEK9-M), Version 15.2(4)M7",
+            "alive": 1
+        },
+        "interfaces": [
+            {
+                "name": "fe4",
+                "ip": "10.10.10.18"
+            },
+            {
+                "name": "fe5",
+                "ip": "10.10.10.14"
+            }
+        ]
     },
     {
         "hostname": "TOR-2",
@@ -46,18 +77,19 @@
             "user": "roy",
             "password": "123",
             "ip_lookback": "127.0.0.1",
-            "so": "Cisco IOS Software, 7200 Software (C7200-ADVENTERPRISEK9-M), Version 15.2(4)M7"
-        }
-    },
-    {
-        "hostname": "R2",
-        "data": {
-            "ip": "10.10.10.6",
-            "user": "roy",
-            "password": "123",
-            "ip_lookback": "127.0.0.1",
-            "so": "Cisco IOS Software, 7200 Software (C7200-ADVENTERPRISEK9-M), Version 15.2(4)M7"
-        }
+            "so": "Cisco IOS Software, 7200 Software (C7200-ADVENTERPRISEK9-M), Version 15.2(4)M7",
+            "alive": 1
+        },
+        "interfaces": [
+            {
+                "name": "fe4",
+                "ip": "10.10.10.10"
+            },
+            {
+                "name": "fe5",
+                "ip": "10.10.10.22"
+            }
+        ]
     },
     {
         "hostname": "EDGE",
@@ -66,7 +98,18 @@
             "user": "roy",
             "password": "123",
             "ip_lookback": "127.0.0.1",
-            "so": "Cisco IOS Software, 7200 Software (C7200-ADVENTERPRISEK9-M), Version 15.2(4)M7"
-        }
+            "so": "Cisco IOS Software, 7200 Software (C7200-ADVENTERPRISEK9-M), Version 15.2(4)M7",
+            "alive": 1
+        },
+        "interfaces": [
+            {
+                "name": "fe4",
+                "ip": "10.10.10.1"
+            },
+            {
+                "name": "fe5",
+                "ip": "10.10.10.5"
+            }
+        ]
     }
 ]

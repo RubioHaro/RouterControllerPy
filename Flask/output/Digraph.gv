@@ -1,0 +1,24 @@
+// Red
+digraph {
+	node [color=lightblue2 style=filled]
+	label="\nTopología de la red\n"
+	node [shape=ellipse]
+	R1 [label=R1]
+	node [shape=ellipse]
+	R2 [label=R2]
+	node [shape=ellipse]
+	"TOR-1" [label="TOR-1"]
+	node [shape=box]
+	SME [label=SME]
+	"TOR-1" -> SME [arrowhead=none]
+	node [shape=ellipse]
+	"TOR-2" [label="TOR-2"]
+	node [shape=ellipse]
+	"EDGE" [label="EDGE"]
+	R1 -> "TOR-2" [arrowhead=none]
+	R1 -> "TOR-1" [arrowhead=none]
+	R2 -> "TOR-1" [arrowhead=none]
+	R2 -> "TOR-2" [arrowhead=none]
+	"EDGE" -> R1 [arrowhead=none]
+	"EDGE" -> R2 [arrowhead=none]
+}
