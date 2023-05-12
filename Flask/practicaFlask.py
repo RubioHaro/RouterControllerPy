@@ -3,11 +3,13 @@ import time
 import getpass
 import paramiko
 import graphviz
+import platform 
+import subprocess
 
 from Router import Router
 from Conector import Conector
 
-from flask import Flask, jsonify, url_for, request, Response
+from flask import Flask, jsonify, request
 app = Flask(__name__)
 
 
@@ -20,27 +22,39 @@ with open('dispositivos.json', 'r') as f:
 max_buffer = 65535
 
 
-def clear_buffer(conexion):
-    if conexion.recv_ready():
-        return conexion.recv(max_buffer)
+def clear_buffer(connection):
+    if connection.recv_ready():
+        return connection.recv(max_buffer)
 
 
 def createConnection(host, usuario, password):
-    conexion = paramiko.SSHClient()
-    conexion.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+    connection = paramiko.SSHClient()
+    connection.set_missing_host_key_policy(paramiko.AutoAddPolicy())
     try:
-        conexion.connect(host, username=usuario,
-                         password=password, look_for_keys=False, allow_agent=False, timeout=0.5)
+        connection.connect(host, username=usuario,
+                         password=password, look_for_keys=False, allow_agent=False, timeout=5)
         print("new connection to" + host)
-        return conexion
+        return connection
     except:
-        print("An exception occurred: connection failed")
+        print("An exception occurred: connection failed at: " + host)
         return None
-
 
 class Commander:
     def __init__(self, router):
         self.router = router
+
+    def pingInterface(interface):
+        return pingHost(interface)
+    
+    def isAlive(self):
+        r_list  = self.router.interfaces_list
+        for i in range(len(r_list)):
+            host = r_list[i]["ip"]
+            # print("ping host:" +str(host))
+            param = '-n' if platform.system().lower()=='windows' else '-c'
+            command = ['ping', param, '1', host]
+            self.router.alive = subprocess.call(command) == 0
+        return self.router
 
     def testRouter(self):
         return self.executeCommand(command="help")
@@ -146,10 +160,10 @@ def graficar(routers_objects):
 
 def getRouter(hostname):
     routers = hosts
-
+    print("SEARCHING: "+ hostname)
     for i in range(len(routers)):
         if routers[i]["hostname"] == hostname:
-            # print(f'R data: {routers[i]["data"]}')
+            print(f'R data: {routers[i]["data"]}')
 
             host = routers[i]["data"]["ip"]
             user = routers[i]["data"]["user"]
@@ -161,8 +175,8 @@ def getRouter(hostname):
             except:
                 interfaces_list = "None"
             return Router(hostname, host, user, password, interfaces_list, ip_lookback, so)
-    else:
-        return None
+        
+    return None
 
 
 def getRouters():
@@ -180,9 +194,14 @@ def getRouters():
         except:
             interfaces_list = "None"
 
-        routers_objects.append(
-            Router(hostname, host, user, password, interfaces_list, so, ip_lookback))
-        graficar(routers_objects)
+        r = Router(hostname, host, user, password, interfaces_list, so, ip_lookback)
+        try:
+           print("geting alive: ")
+           r = Commander(r).isAlive()
+        except:
+            continue
+        routers_objects.append(r)
+
     return routers_objects
 
 
@@ -258,20 +277,23 @@ def usuarios():
             user_list_with_routers = []
             for user in user_list:
                 routers_where_user_is = []
+                links_routers_where_user_is = []
                 for router_result in JSONResposes:
                     try:
                         for user_in_router in router_result["user_list"]:
                             if user_in_router["user"] == user:
                                 routers_where_user_is.append(
                                     router_result["router"])
+                                links_routers_where_user_is.append(
+                                    "http://localhost:8080/routers/"+router_result["router"])
                     except:
                         continue
                 user_list_with_routers.append({
                     "user": user,
-                    "routers": routers_where_user_is
+                    "routers": routers_where_user_is,
+                    "routers, links:": links_routers_where_user_is
                 })
-            print("user info: ")
-            print(user_list_with_routers)
+           
             JSONResposes = user_list_with_routers
 
         response_json = {
@@ -415,16 +437,23 @@ def routersList():
         interfaces = "None"
         if hasattr(router, "interfaces_list") and router.interfaces_list != "" and router.interfaces_list != "":
             interfaces = router.interfaces_list
+            links_interfaces = []
+            for i in range(len(interfaces)):
+                ip_addr = interfaces[i]["ip"]
+                links_interfaces.append("http://localhost:8080/routers/" + router.name + "/interfaces/" + ip_addr) 
+                
+            # for interface in interfaces:
         router_json = {
             "hostname": router.name,
             "data": {
-                "ip": router.host,
+                "admin_ip": router.host,
                 "ip_lookback": router.ip_lookback,
                 "admin_user": router.user,
                 "admin_password": router.password,
                 "os": router.os
             },
-            "interfaces": interfaces
+            "interfaces": interfaces,
+            "links-interfaces:": links_interfaces,
         }
 
         response.append(router_json)
@@ -432,14 +461,99 @@ def routersList():
     return jsonify(result=response)
 
 
-@app.route('/routers/<hostname>/usuarios')
+@app.route('/routers/<hostname>/usuarios', methods=['GET', 'POST', 'DELETE', 'PUT'])
 def users(hostname):
-
     selected_router = getRouter(hostname)
-
     if selected_router:
-        cmder = Commander(selected_router)
-        return jsonify(response=cmder.getUsersBrief())
+        if request.method == 'GET':
+            cmder = Commander(selected_router)
+            return jsonify(response=cmder.getUsersBrief())
+            
+        if request.method == 'POST':
+            data = request.json
+
+            user = data.get('user')
+            if user == None or user == "":
+                return "user is required"
+
+            password = data.get('password')
+            if password == None or password == "":
+                return "password is required"
+
+            priv = data.get('privilege')
+            if priv == "" or priv == None:
+                priv = "1"
+            if priv not in ["1", "15"]:
+                return "privilege must be 1 or 15"
+
+            JSONResposes = []
+            cmder = Commander(selected_router)
+            JSONResposes.append("router=" + selected_router.name + ", " + "response=" + cmder.setUser(user=user, password=password, priv=priv))
+            
+            response_json = {
+                "data": {
+                    "user": user,
+                    "password": password,
+                    "privilege": priv
+                },
+                "result": JSONResposes
+            }
+
+            return jsonify(response_json)
+        if request.method == 'PUT':
+            data = request.json
+            new_user = data.get('new_user')
+            user = data.get('user')
+            if user == None or user == "":
+                return "user is required"
+
+            password = data.get('password')
+            if password == "" or password == None:
+                return "password cannot be emṕty"
+
+            priv = data.get('privilege')
+            if priv == None:
+                return "privilege is required"
+            if priv == "":
+                priv = "1"
+            if priv not in ["1", "15"]:
+                return "privilege must be 1 or 15"
+
+            
+            cmder = Commander(selected_router)
+            cmder.deleteUser(user=user)
+            JSONResposes=[]
+            JSONResposes.append("router=" + str(selected_router.name) + ", " + "response=" + cmder.setUser(user=new_user, password=password, priv=priv))
+
+            response_json = {
+                "data": {
+                    "new_user": new_user,
+                    "old_user": user,
+                    "password": password,
+                    "privilege": priv
+                },
+                "result": JSONResposes
+            }
+            return jsonify(response_json)
+        elif request.method == 'DELETE':
+            data = request.json
+            user = data.get('user')
+            if user == None or user == "":
+                return "user is required"
+
+            routerList = getRouters()
+            JSONResposes = []
+            # Iterate every router
+            
+            cmder = Commander(selected_router)
+            JSONResposes.append("router=" + selected_router.name +", " + "response=" + cmder.deleteUser(user=user))
+            response_json = {
+                "data": {
+                    "user": user
+                },
+                "result": JSONResposes
+            }
+            return jsonify(response_json)
     else:
         return 'Hostname invalido', 400
 
@@ -454,6 +568,21 @@ def interfaces(hostname):
         return jsonify(response=cmder.getInterfaceBrief())
     else:
         return 'Hostname invalido', 400
+
+
+def pingHost(host):
+    print("searching for " + host)
+    param = '-n' if platform.system().lower()=='windows' else '-c'
+    command = ['ping', param, '1', host]
+    res = subprocess.call(command) == 0
+    return str(res)
+
+@app.route('/topologias/grafica')
+def graph():
+
+    routers = getRouters()
+    graficar(routers_objects=routers)
+    return 'Mostrando Grafica', 200
 
 
 @app.route('/routers/<hostname>/')

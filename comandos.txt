@@ -1,3 +1,6 @@
+Conect to SSH
+	ssh -o HostKeyAlgorithms=+ssh-rsa -o PubkeyAcceptedKeyTypes=+ssh-rsa -l roy 10.10.10.6
+
 Configurar el router
 	Pasos:
 	1. conf t : comando para ingresar al modo de configuracion del router

@@ -5,7 +5,7 @@
             "ip": "10.10.10.2",
             "user": "roy",
             "password": "123",
-            "ip_lookback": "127.0.0.1",
+            "ip_lookback": "Private Use",
             "so": "Cisco IOS Software, 7200 Software (C7200-ADVENTERPRISEK9-M), Version 15.2(4)M7",
             "alive": 1
         },
@@ -30,7 +30,7 @@
             "ip": "10.10.10.6",
             "user": "roy",
             "password": "123",
-            "ip_lookback": "127.0.0.1",
+            "ip_lookback": "Private Use",
             "so": "Cisco IOS Software, 7200 Software (C7200-ADVENTERPRISEK9-M), Version 15.2(4)M7",
             "alive": 1
         },
@@ -55,7 +55,7 @@
             "ip": "10.10.10.14",
             "user": "roy",
             "password": "123",
-            "ip_lookback": "127.0.0.1",
+            "ip_lookback": "Private Use",
             "so": "Cisco IOS Software, 7200 Software (C7200-ADVENTERPRISEK9-M), Version 15.2(4)M7",
             "alive": 1
         },
@@ -76,7 +76,7 @@
             "ip": "10.10.10.10",
             "user": "roy",
             "password": "123",
-            "ip_lookback": "127.0.0.1",
+            "ip_lookback": "Private Use",
             "so": "Cisco IOS Software, 7200 Software (C7200-ADVENTERPRISEK9-M), Version 15.2(4)M7",
             "alive": 1
         },
@@ -97,7 +97,7 @@
             "ip": "10.10.10.1",
             "user": "roy",
             "password": "123",
-            "ip_lookback": "127.0.0.1",
+            "ip_lookback": "Private Use",
             "so": "Cisco IOS Software, 7200 Software (C7200-ADVENTERPRISEK9-M), Version 15.2(4)M7",
             "alive": 1
         },
